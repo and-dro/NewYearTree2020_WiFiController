@@ -3,6 +3,7 @@
 #include "remoteState.h"
 #include "modeChanger.h"
 #include "webServer.h"
+#include "mqqt.h"
 
 void setup() {
   
@@ -19,6 +20,7 @@ void setup() {
   ModeChanger.value = 128;
 
   webSeverStart();
+  mqqtServiceStart();
   
   remoteStateSend();
   
@@ -35,5 +37,7 @@ void loop()
     Serial.print('.');
   }
   webServerProcessRequest();
+  mqqtServiceTick();
   modeChangerTick();
+  
 }
