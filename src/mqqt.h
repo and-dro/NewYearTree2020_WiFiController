@@ -1,5 +1,3 @@
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>// MQTT library
 #include "private.h"
 
 #ifndef MQQT_USER
@@ -72,7 +70,7 @@ void mqqtServiceStart()
 
         mqttClient.publish(mqtt_topic(F("test")).c_str(), "on", false);
         
-        nextOut = millis() + 5000;
+        nextOut = millis() + 15000;
     }
     else
     {
@@ -93,10 +91,10 @@ void mqqtServiceTick()
   mqttClient.loop();
     if(nextOut < millis())
     {
-      nextOut = millis() + 5000;
+      nextOut = millis() + 15000;
       if(mqttClient.connected())
       {
-        mqttClient.publish(mqtt_topic(F("test")).c_str(), String(millis()).c_str(), false);   
+        // mqttClient.publish(mqtt_topic(F("test")).c_str(), String(millis()).c_str(), false);   
       }
       else
       {
@@ -105,4 +103,8 @@ void mqqtServiceTick()
       
   }
 
+}
+void mqqtNewSettings()
+{
+  Serial.println("new settings");
 }

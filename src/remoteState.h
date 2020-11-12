@@ -39,13 +39,13 @@ template <typename T> int I2C_readAnything(T& value)
 
 void remoteStateSend()
 {
-    Serial.println("Send state:");
+    Serial.print("Send state: ");
     Serial.print("mode:");
     Serial.println(RemoteState.mode);
-    Serial.print("speed:");
-    Serial.println(RemoteState.brightness);
-    Serial.print("brightness:");
-    Serial.println(RemoteState.speed);
+    // Serial.print("speed:");
+    // Serial.println(RemoteState.brightness);
+    // Serial.print("brightness:");
+    // Serial.println(RemoteState.speed);
 
 
     Wire.beginTransmission(8);

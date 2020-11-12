@@ -18,27 +18,53 @@ ESP8266WebServer server(80);
 
 #include "indexPage.h"
 
-void handleRoot() {
+void handleRoot()
+{
   server.send(200, "text/html", index_html);
 }
 
-void handleGetSettings() {
-  char state[50];
-  sprintf(state, "{\"brightness\":%d,\"speed\":%d,\"change\":%d,\"mode\":%d}", RemoteState.brightness, RemoteState.speed, ModeChanger.value, RemoteState.mode);
+void handleGetSettings()
+{
+  String state = "{\"brightness\":";
+  state += RemoteState.brightness;
+  state += ",\"speed\":";
+  state += RemoteState.speed;
+  state += ",\"change\":";
+  state += ModeChanger.value;
+  state += ",\"mode\":\"";
+  state += LocalStateToMode();
+  state += "\",\"status\":\"";
+  state += LocalStateInfo();
+  state += "\"}";
+  
   server.send(200, "text/json", state);
 }
 
-void handleSetSettings(){
-  Serial.println(server.args());
+void handleSetSettings()
+{
   for (uint8_t i = 0; i < server.args(); i++) {
     if(server.argName(i) == "b") RemoteState.brightness = atoi(server.arg(i).c_str());
     if(server.argName(i) == "s") RemoteState.speed = atoi(server.arg(i).c_str());
-    if(server.argName(i) == "m") RemoteState.mode = atoi(server.arg(i).c_str());
+    if(server.argName(i) == "m") LocalModeSet(server.arg(i));
     if(server.argName(i) == "c") ModeChanger.value = atoi(server.arg(i).c_str());
   }
   server.send(200, "text/json", "{\"result\":true}");
-  
-  remoteStateSend();
+  modeChangerLocalStateToRemoteState();
+}
+
+void handleGetMQQT()
+{
+  server.send(200, "text/json", getMqqtSettingsAsJSON());
+}
+
+void handleSetMQQT()
+{
+  Serial.println("new args list as mqqt settings:");
+  for (uint8_t i = 0; i < server.args(); i++) 
+  {
+    Serial.println(server.arg(i));
+  }
+  mqqtNewSettings();
 }
 
 void handleNotFound() {
@@ -83,8 +109,13 @@ void webSeverStart()
   }
 
   server.on("/", handleRoot);
+
   server.on("/set", HTTP_GET, handleGetSettings);
   server.on("/set", HTTP_PUT, handleSetSettings);
+
+  server.on("/mqqt", HTTP_GET, handleGetMQQT);
+  server.on("/mqqt", HTTP_PUT, handleSetMQQT);
+
   server.onNotFound(handleNotFound);
 
   server.begin();

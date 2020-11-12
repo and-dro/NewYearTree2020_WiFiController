@@ -1,6 +1,13 @@
 #include <Arduino.h>
+#include <WString.h>
+#include <ArduinoJson.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>// MQTT library
 
 #include "remoteState.h"
+#include "localState.h"
+#include "mqqtSettins.h"
+
 #include "modeChanger.h"
 #include "webServer.h"
 #include "mqqt.h"
@@ -15,7 +22,9 @@ void setup() {
   
   Wire.begin(D1, D2); // задаем i2c мост через контакты SDA=D1 и SCL=D2 на NodeMCU
 
+  
   remoteStateInit();
+  localStateInit();
 
   ModeChanger.value = 128;
 
@@ -24,6 +33,8 @@ void setup() {
   
   remoteStateSend();
   
+  getMqqtSettingsAsJSON();
+
  }
 
 static bool state = false;

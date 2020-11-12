@@ -1,39 +1,65 @@
 struct modeChanger
 {
-    uint8_t value;
-    uint8_t activeValue;
+    uint8_t value;  // положение ползунка полученное из web-интерфейса. 0..255, первые 5 - считаем что выключено, 255 - часто меням
+    uint8_t activeValue; // обработанное положение ползунка
     uint8_t activeEffect;
-    unsigned long changeTime;
+    ulong LastTime;
+    ulong Duration;
 } ModeChanger;
+
+void modeChangerLocalStateToRemoteState()
+{
+    if(LocalState.state && (RemoteState.mode == 0 || LocalStateModeDisabled(RemoteState.mode)))
+    {
+        RemoteState.mode = LocalStateGetNextMode();
+        Serial.print("New on mode from off: ");
+        Serial.println(RemoteState.mode);
+        remoteStateSend();
+    }
+    if(!LocalState.state && RemoteState.mode != 0)
+    {
+        LocalState.LastMode = RemoteState.mode;
+        RemoteState.mode = 0;
+    }
+    
+}
 
 void modeChangerTick()
 {
     if(ModeChanger.activeEffect != RemoteState.mode)
     {
         ModeChanger.activeEffect = RemoteState.mode;
-        ModeChanger.activeValue = ModeChanger.value + 1;
+        ModeChanger.activeValue = !ModeChanger.value; // интервал смены эффекта устанавливаем при смене эффекта и при движении ползунка
     }
-    if(ModeChanger.activeValue != ModeChanger.value)
+
+    ulong now = millis();
+
+    if(ModeChanger.activeValue != ModeChanger.value) // ползунок был сдвинут (или была смена активного эффекта)?
     {
         ModeChanger.activeValue = ModeChanger.value;
-        if(ModeChanger.activeValue < 20 || ModeChanger.activeEffect == 0)
+        Serial.print("New mode chager: ");
+        Serial.println(ModeChanger.value);
+
+        if(ModeChanger.activeValue < 5 || ModeChanger.activeEffect == 0)
         {
-            ModeChanger.changeTime = 0;
+            ModeChanger.LastTime = 0; // выключем смену эффектов
         }
         else
         {
-            uint16_t duration = map(255 - ModeChanger.activeValue, 0, 235, 30, 60 * 5) * 1000;
-            duration += random(map(255 - ModeChanger.activeValue, 0, 235, 10, 60 * 3)) * 1000;
-            Serial.print("time to change: ");
-            Serial.println(duration);
-            ModeChanger.changeTime = millis() +  duration;
+            ModeChanger.Duration = map(255 - ModeChanger.activeValue, 0, 235, 30, 60 * 5) * 1000;
+            ModeChanger.Duration += random(map(255 - ModeChanger.activeValue, 0, 235, 10, 60 * 3)) * 1000;
+            Serial.print("Time to next effect: ");
+            Serial.print(ModeChanger.Duration / 1000);
+            Serial.println(" sec.");
+            ModeChanger.LastTime = now;
         }
     }
-    if(ModeChanger.changeTime > 0 && ModeChanger.changeTime < millis())
+    if(ModeChanger.LastTime > 0 && now - ModeChanger.LastTime >= ModeChanger.Duration)
     {
-        ModeChanger.activeEffect = 0;
-        RemoteState.mode = random(1,4);
-        Serial.print("new random mode: ");
+        ModeChanger.activeEffect = 0; // чтобы на следующем цикле установить интервал до следующей эффекта
+        RemoteState.mode = LocalStateGetNextMode();
+
+        Serial.print("New random mode: ");
         Serial.println(RemoteState.mode);
         remoteStateSend();
     }

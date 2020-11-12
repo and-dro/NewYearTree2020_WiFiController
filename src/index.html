@@ -104,7 +104,7 @@ function init(){
   window.setInterval(updateState, 1000);
   updateState();
   gClk("labels", goToPage);
-  activateTab(2)
+  activateTab(0)
 }
 function goToPage(e)
 {
@@ -130,31 +130,29 @@ function activateTab(index)
   }
 }
 function sendSettings(element){
-  if(element.id == "state")toggleCheckbox(null);
   postState();
 }
 function toggleCheckbox(element) {
-  var collection = document.getElementsByClassName("mode");
-  var checkedCnt = 0;
-  for(var i=0;i<collection.length;i++)if(collection[i].checked)checkedCnt++;
-  if(checkedCnt == 0)
+  var state = gobj("state");
+  if(element.checked)
   {
-    if(collection[0] === element)collection[collection.length-1].checked = true;else collection[0].checked = true;
-  }
-  if(element && element.checked)
-  {
-    var state = gobj("state");
     if(!state.checked)state.checked=true;
+  }
+  else
+  {
+    var collection = document.getElementsByClassName("mode");
+    var checkedCnt = 0;
+    for(var i=0;i<collection.length;i++)if(collection[i].checked)checkedCnt++;
+    if(checkedCnt === 0)state.checked=false;
   }
   postState();
 }
 function mode(){
   var mode = gobj("state").checked ? "1" : "0";
   var collection = document.getElementsByClassName("mode");
-  for(var i=0;i<collection.length;i++)
-  {
-    mode = mode + collection[i].checked ? "1" : "0"
-  }
+  
+  for(var i=0;i<collection.length;i++) mode += collection[i].checked ? "1" : "0"
+  
   return mode;
 }
 function postState() 
@@ -223,7 +221,7 @@ function showState(responseText)
   var collection = document.getElementsByClassName("mode");
   for(var i=0;i<collection.length;i++)
   {
-    collection[i].checked = state.mode.slice(i + 1,1) === "1";
+    collection[i].checked = state.mode.slice(i + 1,i + 2) === "1";
   }
   gobj("status").innerText = state.status;
 }
