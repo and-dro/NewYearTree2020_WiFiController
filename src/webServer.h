@@ -20,11 +20,15 @@ ESP8266WebServer server(80);
 
 void handleRoot()
 {
+  Serial.println("http200 - root");
+  Serial.println(server.uri());
   server.send(200, "text/html", index_html);
 }
 
 void handleGetSettings()
 {
+  Serial.println("http200 - get settings");
+
   String state = "{\"brightness\":";
   state += RemoteState.brightness;
   state += ",\"speed\":";
@@ -54,6 +58,7 @@ void handleSetSettings()
 
 void handleGetMQQT()
 {
+  Serial.println("getMqqt cmd");
   server.send(200, "text/json", getMqqtSettingsAsJSON());
 }
 
@@ -63,11 +68,22 @@ void handleSetMQQT()
   for (uint8_t i = 0; i < server.args(); i++) 
   {
     Serial.println(server.arg(i));
+    if(server.argName(i) == "settings") {
+      if(setMqqtSettingsFromJSON(server.arg(i)))
+      {
+        saveMqqtSettingsToFile();
+      }
+    }
+      
   }
-  mqqtNewSettings();
+  //mqqtNewSettings();
 }
 
-void handleNotFound() {
+void handleNotFound() 
+{
+  Serial.println("http404");
+  Serial.println(server.uri());
+
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -111,9 +127,11 @@ void webSeverStart()
   server.on("/", handleRoot);
 
   server.on("/set", HTTP_GET, handleGetSettings);
+  server.on("/set", HTTP_POST, handleGetSettings);
   server.on("/set", HTTP_PUT, handleSetSettings);
 
   server.on("/mqqt", HTTP_GET, handleGetMQQT);
+  server.on("/mqqt", HTTP_POST, handleGetMQQT);
   server.on("/mqqt", HTTP_PUT, handleSetMQQT);
 
   server.onNotFound(handleNotFound);

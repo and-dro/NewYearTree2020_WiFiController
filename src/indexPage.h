@@ -66,7 +66,7 @@ const char index_html[] PROGMEM = R"rawliteral(
       <p><label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="mode3" class="mode"/><span class="control"></span><span class="text">Полоски</span></label></p>
       <p><label class="switch"><input type="checkbox" onchange="toggleCheckbox(this)" id="mode4" class="mode"/><span class="control"></span><span class="text">Разметка</span></label></p>
   </div>
-  <div id="page3" class="inputs">
+  <div id="pageMQQT" class="inputs">
     <p><label  for="server" class="textinput">Cервер:</label><input type="text" id="server" class="textinput"/></p>
     <p><label for="port" class="textinput">Порт:</label><input type="number" id="port" class="textinput"/></p>
     <p><label for="user" class="textinput">Пользователь:</label><input type="text" id="user" class="textinput"/></p>
@@ -108,6 +108,7 @@ function init(){
   updateState();
   gClk("labels", goToPage);
   activateTab(0)
+  gClk("SetMQQT", setMQQT);
 }
 function goToPage(e)
 {
@@ -116,7 +117,7 @@ function goToPage(e)
   {
     var holder = gPrnt(src, "DIV");
     var collection = gTags(holder, "SPAN");
-    for(var i=0;i<collection.length;i++)if(collection[i] === src)activateTab(i);
+    for(var i=0;i<collection.length;i++)if(collection[i] === src) activateTab(i);
   }
 }
 function activateTab(index)
@@ -127,8 +128,13 @@ function activateTab(index)
   {
     for(var i=0;i<labels.length;i++)
     {
-      gclass(labels[i], i == index ? "+active" : "-active");
-      gclass(pages[i], i == index ? "+active" : "-active");
+      gclass(labels[i], i === index ? "+active" : "-active");
+      gclass(pages[i], i === index ? "+active" : "-active");
+      if(i === index)
+      {
+        var page = pages[i];
+        if(page.id === "pageMQQT") loadMQQTSettings();
+      }
     }
   }
 }
@@ -166,8 +172,26 @@ function postState()
   }
   stateId = 2;
   var state = "b="+gobj("brightness").value+"&s="+gobj("speed").value+"&c="+gobj("change").value+"&m="+mode();
+  sendMessage("/set?" +  state);
+  window.setTimeout(sendTimeOut, 3000);
+}
+function setMQQT()
+{
+  var settings = {
+    server: gobj("server").value,
+    port: gobj("port").value,
+    user: gobj("user").value,
+    password: gobj("password").value,
+    client: gobj("client").value,
+    device: gobj("device").value,
+    mqqtActive: gobj("mqqtActive").checked
+  };
+  sendMessage("/mqqt?settings=" +  JSON.stringify(settings));
+}
+function sendMessage(value)
+{
   var xhr = new XMLHttpRequest();
-  xhr.open("PUT", "/set?" +  state,  true); 
+  xhr.open("PUT", value,  true); 
   xhr.onreadystatechange = function () {
     if(xhr.readyState === XMLHttpRequest.DONE){
       if(xhr.status === 200) {
@@ -181,7 +205,6 @@ function postState()
     }
   };
   xhr.send();
-  window.setTimeout(sendTimeOut, 3000);
 }
 function sendTimeOut()
 {
@@ -194,8 +217,19 @@ function SetConnectionError()
 function updateState() 
 {
   if(stateId != 0) return;
+  request4State("/set");
+}
+function loadMQQTSettings() 
+{
+  console.log("req mqqt");
+  request4State("/mqqt");
+  console.log("fin");
+}
+function request4State(adress) 
+{
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/set",  true); 
+  xhr.open("GET", adress,  true); 
+  xhr.setRequestHeader("Content-Type", "application/json");
   xhr.onreadystatechange = function () {
     if(xhr.readyState === XMLHttpRequest.DONE){
       if(xhr.status === 200) {
@@ -217,6 +251,22 @@ function showState(responseText)
     return;
   } 
   var state = JSON.parse(responseText);
+  if(state.mode) showMainSettings(state);
+  if(state.mqqt) showMQQTSettings(state);
+}
+function showMQQTSettings(state)
+{
+  gobj("server").value = state.server;
+  gobj("port").value = state.port;
+  gobj("user").value = state.user;
+  gobj("password").value = state.password;
+  gobj("client").value = state.client;
+  gobj("device").value = state.device;
+  gobj("mqqtActive").checked = state.mqqtActive === true;
+}
+
+function showMainSettings(state)
+{
   gobj("brightness").value = state.brightness;
   gobj("speed").value = state.speed;
   gobj("change").value = state.change;

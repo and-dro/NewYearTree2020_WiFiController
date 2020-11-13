@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>// MQTT library
+#include <LittleFS.h>// https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
 
 #include "remoteState.h"
 #include "localState.h"
@@ -22,10 +23,12 @@ void setup() {
   
   Wire.begin(D1, D2); // задаем i2c мост через контакты SDA=D1 и SCL=D2 на NodeMCU
 
+  LittleFS.begin();
   
   remoteStateInit();
   localStateInit();
-
+  mqqtSettingsInit();
+  
   ModeChanger.value = 128;
 
   webSeverStart();
