@@ -72,11 +72,10 @@ void handleSetMQQT()
       if(setMqqtSettingsFromJSON(server.arg(i)))
       {
         saveMqqtSettingsToFile();
+        mqqtNewSettings();
       }
     }
-      
   }
-  //mqqtNewSettings();
 }
 
 void handleNotFound() 

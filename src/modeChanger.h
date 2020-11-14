@@ -20,6 +20,7 @@ void modeChangerLocalStateToRemoteState()
     {
         LocalState.LastMode = RemoteState.mode;
         RemoteState.mode = 0;
+        remoteStateSend();
     }
     
 }
@@ -37,7 +38,7 @@ void modeChangerTick()
     if(ModeChanger.activeValue != ModeChanger.value) // ползунок был сдвинут (или была смена активного эффекта)?
     {
         ModeChanger.activeValue = ModeChanger.value;
-        Serial.print("New mode chager: ");
+        Serial.print("New mode chagner value: ");
         Serial.println(ModeChanger.value);
 
         if(ModeChanger.activeValue < 5 || ModeChanger.activeEffect == 0)

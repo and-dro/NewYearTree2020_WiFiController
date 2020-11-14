@@ -222,13 +222,15 @@ function loadMQQTSettings()
   request4State("/mqqt");
   console.log("fin");
 }
+var xhr;
 function request4State(adress) 
 {
-  var xhr = new XMLHttpRequest();
+  if(!xhr) xhr = new XMLHttpRequest();
   xhr.open("GET", adress,  true); 
   xhr.setRequestHeader("Content-Type", "application/json");
   xhr.onreadystatechange = function () {
     if(xhr.readyState === XMLHttpRequest.DONE){
+      window.clearTimeout(requestTimeout);
       if(xhr.status === 200) {
         showState(xhr.responseText);
       }
@@ -239,6 +241,11 @@ function request4State(adress)
     }
   };
   xhr.send();
+  window.setTimeout(requestTimeout, 500);
+}
+function requestTimeout()
+{
+  
 }
 function showState(responseText) 
 {
