@@ -9,16 +9,26 @@ struct modeChanger
 
 void modeChangerLocalStateToRemoteState()
 {
-    if(LocalState.state && (RemoteState.mode == 0 || LocalStateModeDisabled(RemoteState.mode)))
+    if(LocalState.state)
     {
-        RemoteState.mode = LocalStateGetNextMode();
-        Serial.print("New on mode from off: ");
-        Serial.println(RemoteState.mode);
-        remoteStateSend();
+        if(RemoteState.mode == 0 || LocalStateModeDisabled(RemoteState.mode))
+        {
+            RemoteState.mode = LocalStateGetNextMode();
+            Serial.print("New on mode from off: ");
+            Serial.println(RemoteState.mode);
+            remoteStateSend();
+        }
+        else if(LocalState.speed != RemoteState.speed || LocalState.brightness != RemoteState.brightness)
+        {
+            LocalState.speed = RemoteState.speed;
+            LocalState.brightness = RemoteState.brightness;
+            remoteStateSend();
+        }
+        
     }
     if(!LocalState.state && RemoteState.mode != 0)
     {
-        LocalState.LastMode = RemoteState.mode;
+        LocalState.lastMode = RemoteState.mode;
         RemoteState.mode = 0;
         remoteStateSend();
     }
